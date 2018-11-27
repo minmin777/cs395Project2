@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "611012919056",
+    "firebase_url": "https://materialistic-profile.firebaseio.com",
+    "project_id": "materialistic-profile",
+    "storage_bucket": "materialistic-profile.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:611012919056:android:4919585bb3065370",
+        "android_client_info": {
+          "package_name": "io.github.hidroh.materialistic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "611012919056-ivsctkfmj1tirp7pdu1lb7uofg8c84hj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnlZVOfZ2Vgitm04lyIl9Tqhbl4RZo6CQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

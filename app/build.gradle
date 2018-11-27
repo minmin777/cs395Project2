@@ -1,0 +1,99 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
+
+    defaultConfig {
+        applicationId "io.github.hidroh.materialistic"
+        minSdkVersion 14
+        targetSdkVersion 27
+        versionCode 76
+        versionName "3.2"
+        buildConfigField "int", "LATEST_RELEASE", "75"
+        buildConfigField "String", "GITHUB_TOKEN", "\"\""
+        buildConfigField "String", "MERCURY_TOKEN", "\"\""
+        proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                'proguard-rules.pro',
+                'proguard-square.pro',
+                'proguard-support.pro',
+                'proguard-rx.pro'
+        resConfigs "en", "zh-rCN", "es"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled !rootProject.ext.ci
+            useProguard true
+        }
+        release {
+            minifyEnabled true
+            useProguard true
+            shrinkResources true
+        }
+    }
+
+    lintOptions {
+        htmlReport false
+        xmlReport false
+        textReport true
+        lintConfig file("${rootProject.getRootDir()}/lint.xml")
+        warningsAsErrors true
+        abortOnError true
+        explainIssues false
+        absolutePaths false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    aaptOptions {
+        cruncherEnabled = false
+    }
+}
+
+ext {
+    supportVersion = '27.1.0'
+    okHttpVersion = '3.9.1'
+    daggerVersion = '1.2.5'
+    leakCanaryVersion = '1.5.4'
+    retrofitVersion = '2.3.0'
+}
+
+dependencies {
+    implementation "com.google.firebase:firebase-core:16.0.1"
+    implementation "com.google.firebase:firebase-auth:16.0.1"
+    implementation 'com.google.firebase:firebase-storage:16.0.1'
+    implementation 'com.google.firebase:firebase-database:16.0.1'
+    implementation 'com.github.bumptech.glide:glide:4.8.0'
+    implementation 'com.firebaseui:firebase-ui-storage:4.0.0'
+    implementation "com.android.support:appcompat-v7:$supportVersion",
+            "com.android.support:recyclerview-v7:$supportVersion",
+            "com.android.support:cardview-v7:$supportVersion",
+            "com.android.support:design:$supportVersion",
+            "com.android.support:preference-v7:$supportVersion",
+            "com.android.support:customtabs:$supportVersion",
+            "com.squareup.dagger:dagger:$daggerVersion",
+            "com.squareup.retrofit2:retrofit:$retrofitVersion",
+            "com.squareup.retrofit2:converter-gson:$retrofitVersion",
+            "com.squareup.retrofit2:adapter-rxjava:$retrofitVersion",
+            "com.squareup.okhttp3:okhttp:$okHttpVersion",
+            "com.squareup.okhttp3:logging-interceptor:$okHttpVersion",
+            "io.reactivex:rxandroid:1.2.1",
+            "io.reactivex:rxjava:1.1.7"
+
+    debugImplementation "com.squareup.leakcanary:leakcanary-android${rootProject.hasProperty("leak") ? "" : "-no-op"}:$leakCanaryVersion"
+    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
+    testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
+    annotationProcessor "com.squareup.dagger:dagger-compiler:$daggerVersion"
+    testAnnotationProcessor "com.squareup.dagger:dagger-compiler:$daggerVersion"
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
+
+
+}
+
+apply from: "${rootProject.getRootDir()}/robolectric.gradle"
+apply from: "${rootProject.getRootDir()}/jacoco.gradle"
+apply plugin: "com.google.gms.google-services"
