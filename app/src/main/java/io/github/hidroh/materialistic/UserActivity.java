@@ -75,6 +75,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -107,12 +108,16 @@ public class UserActivity extends InjectableActivity implements Scrollable {
     private static int RESULT_LOAD_IMAGE = 1;
     //FirebaseStorage storage = FirebaseStorage.getInstance();
     //StorageReference storageRef = storage.getReferenceFromUrl("https://materialistic-profile.firebaseio.com/");
-    DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("Users");
+
+    DatabaseReference rootRef;
 
     @SuppressWarnings("ConstantConditions")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+        FirebaseApp.initializeApp(this);
+        rootRef = FirebaseDatabase.getInstance().getReference("Users");
         mUsername = getIntent().getStringExtra(EXTRA_USERNAME);
         if (TextUtils.isEmpty(mUsername)) {
             mUsername = AppUtils.getDataUriId(getIntent(), PARAM_ID);
@@ -193,8 +198,28 @@ public class UserActivity extends InjectableActivity implements Scrollable {
                     R.string.offline_notice, Snackbar.LENGTH_LONG)
                     .show();
         }
-        androidImageButton = (ImageButton) findViewById(R.id.image_button_android);
+        if (isStoragePermissionGranted()) {
+            androidImageButton = (ImageButton) findViewById(R.id.image_button_android);
+        }
+        putProfilePictureInButton();
 
+
+
+            androidImageButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+
+                    Intent i = new Intent(
+                            Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivityForResult(i, RESULT_LOAD_IMAGE);
+                    Toast.makeText(UserActivity.this, "It works", Toast.LENGTH_LONG).show();
+
+
+                }
+            });
+
+    }
+    public void putProfilePictureInButton(){
 
         rootRef.child("name").child(mUsername).child("profilepicture").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -223,21 +248,7 @@ public class UserActivity extends InjectableActivity implements Scrollable {
                 Log.d("putprofilepicture", databaseError.toString());
             }
         });
-
-        androidImageButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (isStoragePermissionGranted()) {
-                    Intent i = new Intent(
-                            Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    startActivityForResult(i, RESULT_LOAD_IMAGE);
-                    Toast.makeText(UserActivity.this, "It works", Toast.LENGTH_LONG).show();
-                    //androidImageButton.setImageBitmap(BitmapFactory.decodeFile(i.getData().toString()));
-                }
-            }
-        });
     }
-
     public void addUser(){
         androidImageButton = (ImageButton) findViewById(R.id.image_button_android);
         rootRef.child("name").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -253,22 +264,7 @@ public class UserActivity extends InjectableActivity implements Scrollable {
 
             }
         });
-        /*rootRef.orderByChild("name").equalTo(mUsername).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                //Log.d("adduser", "user is added");
-                //Log.d("adduser", dataSnapshot.getValue().toString());
 
-                if(dataSnapshot.getValue() == null) {
-                    rootRef.child("Users").child("name").setValue(mUsername);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.d("adduser", "user isn't added");
-            }
-        });*/
     }
     public  boolean isStoragePermissionGranted() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -313,13 +309,11 @@ public class UserActivity extends InjectableActivity implements Scrollable {
             String picturePath = cursor.getString(columnIndex);
 
             cursor.close();
-            //final Bundle extras = data.getExtras();
 
-            //if(extras != null){
-                //Bitmap bitmap = extras.getParcelable("data");
                 androidImageButton = (ImageButton) findViewById(R.id.image_button_android);
                 androidImageButton.setImageBitmap(BitmapFactory.decodeFile(picturePath));
-            //}
+
+
 
             FirebaseStorage storage = FirebaseStorage.getInstance();
             StorageReference storageRef = storage.getReferenceFromUrl("gs://materialistic-profile.appspot.com");
@@ -327,14 +321,40 @@ public class UserActivity extends InjectableActivity implements Scrollable {
 
             StorageReference childRef = storageRef.child("images/" + uripath);
 
-                    //.child("Users").child(mUsername).child("image.jpg");
-            //UploadTask uploadTask = childRef.putFile(Uri.parse(picturePath));
-            //InputStream inputStream = new FileInputStream(Uri.fromFile(new File(picturePath)));
+
             Uri ii = Uri.fromFile(new File(picturePath));
             UploadTask uploadTask = childRef.putFile(ii);
+            // below deletes the existing image from storage as we are changing the picture
+            rootRef.child("name").child(mUsername).child("profilepicture").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.getValue() != null){
+                        String referenceid = dataSnapshot.getValue().toString();
+                        StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://materialistic-profile.appspot.com").child("images/" + referenceid);
+                        storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                // File deleted successfully
+                                Toast.makeText(UserActivity.this, "Delete successful", Toast.LENGTH_LONG).show();
+                                Log.d("deleteprofilepicture", "onSuccess: deleted file");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Uh-oh, an error occurred!
+                                Log.d("deleteprofilepicture", "onFailure: did not delete file");
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
             addProfilePicture(uripath);
-            //Uri.fromFile(new File(picturePath))
-            //UploadTask uploadTask = childRef.putStream(inputStream);
+
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -349,20 +369,6 @@ public class UserActivity extends InjectableActivity implements Scrollable {
                     Log.d("uploadTask", "Upload Failed ->" + e);
                 }
             });
-            /*rootRef.child("Users").child(mUsername).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if (!dataSnapshot.hasChildren()) {
-                        // run some code
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });*/
-            //mUserItem.putProfilePicture(BitmapFactory.decodeFile(picturePath));
 
         }
 
@@ -375,10 +381,9 @@ public class UserActivity extends InjectableActivity implements Scrollable {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
 
-                //if(dataSnapshot.getValue() == null) {
+
                 rootRef.child("name").child(mUsername).child("profilepicture").setValue(ii);
-                //rootRef.child("Users").child("name").child(mUsername).child("profilepicture");
-                //}
+
             }
 
             @Override

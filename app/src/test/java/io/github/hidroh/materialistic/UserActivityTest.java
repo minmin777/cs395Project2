@@ -6,9 +6,15 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
+
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -18,6 +24,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.robolectric.Robolectric;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowToast;
 import org.robolectric.util.ActivityController;
@@ -48,7 +55,7 @@ import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 @Config(shadows = ShadowRecyclerViewAdapter.class)
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class UserActivityTest {
     private ActivityController<UserActivity> controller;
     private UserActivity activity;
@@ -93,6 +100,20 @@ public class UserActivityTest {
         });
     }
 
+    @Test
+    public void imagetest(){
+
+        //DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("Users");
+        String mUsername = Preferences.getUsername(activity.getBaseContext());
+                //= user.getId();
+        System.out.print(mUsername);
+        Log.d("testprofile", mUsername);
+        ImageButton ib = (ImageButton) activity.findViewById(R.id.image_button_android);
+        String st = ib.getTag().toString();
+        System.out.print(ib.getTag().toString());
+        Log.d("getpath", ib.getTag().toString());
+        System.out.print("HELLO");
+    }
     @Test
     public void testBinding() {
         verify(userManager).getUser(eq("username"), userCaptor.capture());
@@ -278,8 +299,8 @@ public class UserActivityTest {
         verify(keyDelegate).onKeyLongPress(anyInt(), any(KeyEvent.class));
     }
 
-    @After
+    /*@After
     public void tearDown() {
         controller.pause().stop().destroy();
-    }
+    }*/
 }
